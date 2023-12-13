@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  web-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '0.5'
+    #       memory: 100M
+    image: web-server
+    container_name: web-server
+    restart: always
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www/html
+    depends_on:
+      - mariadb
+    networks:
+      - inet
+
+  mariadb:
+    image: mariadb:latest
+    container_name: mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: nndpr0ject
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - inet
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: phpmyadmin
+    environment:
+      PMA_HOST: mariadb
+      PMA_PORT: 3306
+    ports:
+      - "8081:80"
+    depends_on:
+      - mariadb
+    networks:
+      - inet
+
+networks:
+  inet:
+    driver: bridge
+
+volumes:
+  db_data:
+    external: true
